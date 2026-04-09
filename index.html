@@ -125,7 +125,7 @@ body {
 
     #flipbook {
         width: 100vw !important;
-        height: 85vh !important;
+        height: 90vh !important;
     }
 
     .thumbs {
@@ -188,11 +188,11 @@ function initBook() {
     // Use default dimensions if images failed to load
     let ratio = images[0].width > 0 ? images[0].width / images[0].height : 16/9;
 
-    let width = window.innerWidth * 0.9;
+    let width = window.innerWidth * 0.98;
     let height = width / ratio;
 
-    if (height > window.innerHeight * 0.85) {
-        height = window.innerHeight * 0.85;
+    if (height > window.innerHeight * 0.95) {
+        height = window.innerHeight * 0.95;
         width = height * ratio;
     }
 
