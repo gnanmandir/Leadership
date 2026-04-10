@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flipbook</title>
+<title>Leadership Flipbook</title>
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 <script src="https://cdn.jsdelivr.net/gh/blasten/turn.js/turn.min.js"></script>
@@ -76,6 +76,11 @@ body {
     background: rgba(255,255,255,0.08);
     color: white;
     cursor: pointer;
+    transition: background 0.3s;
+}
+
+.btn:hover {
+    background: rgba(255,255,255,0.15);
 }
 
 /* Counter */
@@ -103,6 +108,11 @@ body {
     border-radius: 6px;
     cursor: pointer;
     opacity: 0.5;
+    transition: opacity 0.3s, border 0.3s;
+}
+
+.thumbs img:hover {
+    opacity: 0.7;
 }
 
 .thumbs img.active {
@@ -115,7 +125,7 @@ body {
 
     #flipbook {
         width: 100vw !important;
-        height: 85vh !important;
+        height: 90vh !important;
     }
 
     .thumbs {
@@ -134,8 +144,8 @@ body {
 <div id="loader">Loading book...</div>
 
 <div class="topbar">
-    <button class="btn" onclick="toggleFullscreen()">⛶</button>
-    <button class="btn" onclick="toggleThumbs()">☰</button>
+    <button class="btn" onclick="toggleFullscreen()" title="Fullscreen">⛶</button>
+    <button class="btn" onclick="toggleThumbs()" title="Thumbnails">☰</button>
 </div>
 
 <div id="flipbook"></div>
@@ -146,15 +156,24 @@ body {
 
 <script>
 const totalPages = 16;
+const GITHUB_RAW_URL = "https://raw.githubusercontent.com/gnanmandir/Leadership/main";
 let loaded = 0;
 let images = [];
 
-// Preload images
+// Preload images from GitHub
 for (let i = 1; i <= totalPages; i++) {
     let img = new Image();
-    img.src = `page${i}.jpg`;
+    // Format: page01.jpg.jpg, page02.jpg.jpg, etc.
+    let pageNum = String(i).padStart(2, '0');
+    img.src = `${GITHUB_RAW_URL}/page${pageNum}.jpg.jpg`;
 
     img.onload = () => {
+        loaded++;
+        if (loaded === totalPages) initBook();
+    };
+
+    img.onerror = () => {
+        console.error(`Failed to load page${pageNum}.jpg.jpg`);
         loaded++;
         if (loaded === totalPages) initBook();
     };
@@ -166,13 +185,14 @@ function initBook() {
 
     const flipbook = document.getElementById("flipbook");
 
-    let ratio = images[0].width / images[0].height;
+    // Use default dimensions if images failed to load
+    let ratio = images[0].width > 0 ? images[0].width / images[0].height : 16/9;
 
-    let width = window.innerWidth * 0.9;
+    let width = window.innerWidth * 0.98;
     let height = width / ratio;
 
-    if (height > window.innerHeight * 0.85) {
-        height = window.innerHeight * 0.85;
+    if (height > window.innerHeight * 0.95) {
+        height = window.innerHeight * 0.95;
         width = height * ratio;
     }
 
@@ -190,7 +210,8 @@ function initBook() {
     // Thumbnails
     for (let i = 1; i <= totalPages; i++) {
         let thumb = document.createElement("img");
-        thumb.src = `page${i}.jpg`;
+        let pageNum = String(i).padStart(2, '0');
+        thumb.src = `${GITHUB_RAW_URL}/page${pageNum}.jpg.jpg`;
 
         thumb.onclick = () => $('#flipbook').turn('page', i);
 
