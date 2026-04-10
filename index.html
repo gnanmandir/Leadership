@@ -1,223 +1,260 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Magazines</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flipbook</title>
 
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/page-flip/dist/css/page-flip.css">
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script src="https://cdn.jsdelivr.net/gh/blasten/turn.js/turn.min.js"></script>
 
 <style>
 body {
-  margin: 0;
-  font-family: Arial;
-  background: #f5f5f5;
+    margin: 0;
+    background: #0d0d0d;
+    font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+    color: white;
+    overflow: hidden;
 }
 
-h1 {
-  text-align: center;
-  color: red;
+/* Loader */
+#loader {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: #0d0d0d;
+    font-size: 18px;
 }
 
-/* GRID */
-.grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  gap: 20px;
-  padding: 20px;
+/* Flipbook */
+#flipbook {
+    display: none;
+    margin: auto;
 }
 
-.book {
-  background: white;
-  padding: 10px;
-  border-radius: 15px;
-  cursor: pointer;
-  transition: 0.3s;
+/* Page */
+.page {
+    background: #111;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.6);
 }
 
-.book:hover {
-  transform: scale(1.05);
-}
-
-.book img {
-  width: 100%;
-  border-radius: 10px;
-}
-
-/* MODAL */
-#viewerModal {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  backdrop-filter: blur(10px);
-  background: rgba(0,0,0,0.7);
-  display: none;
-  justify-content: center;
-  align-items: center;
-  z-index: 999;
-}
-
-/* CLOSE */
-.close {
-  position: absolute;
-  top: 20px;
-  right: 30px;
-  color: white;
-  font-size: 30px;
-  cursor: pointer;
-}
-
-/* BOOK */
-#book {
-  width: 90vw;
-  max-width: 900px;
-  height: 600px;
-}
-
-/* NAV BUTTONS */
-.nav {
-  position: absolute;
-  top: 50%;
-  transform: translateY(-50%);
-  font-size: 40px;
-  color: white;
-  cursor: pointer;
-  user-select: none;
-}
-
-.left { left: 20px; }
-.right { right: 20px; }
-
-/* PAGE */
 .page img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
 }
 
-/* BOTTOM CONTROLS */
-.controls {
-  position: absolute;
-  bottom: 20px;
-  background: white;
-  padding: 10px 20px;
-  border-radius: 10px;
-  display: flex;
-  gap: 15px;
-  align-items: center;
+/* Center fold */
+#flipbook::before {
+    content: "";
+    position: absolute;
+    width: 12px;
+    height: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(255,255,255,0.05);
+    z-index: 10;
 }
 
-.controls button {
-  border: none;
-  background: #eee;
-  padding: 5px 10px;
-  cursor: pointer;
-  border-radius: 5px;
+/* Topbar */
+.topbar {
+    position: fixed;
+    top: 10px;
+    right: 10px;
+    z-index: 20;
+    display: flex;
+    gap: 8px;
 }
 
+.btn {
+    padding: 8px 12px;
+    border-radius: 20px;
+    border: none;
+    background: rgba(255,255,255,0.08);
+    color: white;
+    cursor: pointer;
+}
+
+/* Counter */
+.counter {
+    position: fixed;
+    bottom: 10px;
+    width: 100%;
+    text-align: center;
+    font-size: 13px;
+}
+
+/* Thumbnails */
+.thumbs {
+    position: fixed;
+    bottom: 40px;
+    width: 100%;
+    display: flex;
+    justify-content: center;
+    gap: 8px;
+    padding: 10px;
+}
+
+.thumbs img {
+    height: 60px;
+    border-radius: 6px;
+    cursor: pointer;
+    opacity: 0.5;
+}
+
+.thumbs img.active {
+    opacity: 1;
+    border: 2px solid white;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+
+    #flipbook {
+        width: 100vw !important;
+        height: 85vh !important;
+    }
+
+    .thumbs {
+        display: none;
+    }
+
+    .page img {
+        object-fit: contain;
+    }
+}
 </style>
 </head>
 
 <body>
 
-<h1>Magazines</h1>
+<div id="loader">Loading book...</div>
 
-<div class="grid">
-  <div class="book" onclick="openBook('book1')">
-    <img src="books/book1/1.jpg">
-    <p>Book 1</p>
-  </div>
-
-  <div class="book" onclick="openBook('book2')">
-    <img src="books/book2/1.jpg">
-    <p>Book 2</p>
-  </div>
+<div class="topbar">
+    <button class="btn" onclick="toggleFullscreen()">⛶</button>
+    <button class="btn" onclick="toggleThumbs()">☰</button>
 </div>
 
-<!-- MODAL -->
-<div id="viewerModal">
+<div id="flipbook"></div>
 
-  <div class="close" onclick="closeBook()">✖</div>
+<div class="counter" id="counter">1 / 16</div>
 
-  <div class="nav left" onclick="prevPage()">❮</div>
-  <div class="nav right" onclick="nextPage()">❯</div>
-
-  <div id="book"></div>
-
-  <div class="controls">
-    <button onclick="prevPage()">⬅</button>
-    <span id="pageInfo">1 / 16</span>
-    <button onclick="nextPage()">➡</button>
-  </div>
-
-</div>
-
-<script src="https://cdn.jsdelivr.net/npm/page-flip/dist/js/page-flip.browser.min.js"></script>
+<div class="thumbs" id="thumbs"></div>
 
 <script>
+const totalPages = 16;
+let loaded = 0;
+let images = [];
 
-let pageFlip;
-let totalPages = 16;
+// Preload images
+for (let i = 1; i <= totalPages; i++) {
+    let img = new Image();
+    img.src = `page${i}.jpg`;
 
-function openBook(bookName) {
+    img.onload = () => {
+        loaded++;
+        if (loaded === totalPages) initBook();
+    };
 
-  const modal = document.getElementById("viewerModal");
-  const container = document.getElementById("book");
+    images.push(img);
+}
 
-  container.innerHTML = "";
+function initBook() {
 
-  for (let i = 1; i <= totalPages; i++) {
-    const div = document.createElement("div");
-    div.classList.add("page");
+    const flipbook = document.getElementById("flipbook");
 
-    const img = document.createElement("img");
-    img.src = `books/${bookName}/${i}.jpg`;
+    let ratio = images[0].width / images[0].height;
 
-    div.appendChild(img);
-    container.appendChild(div);
-  }
+    let width = window.innerWidth * 0.9;
+    let height = width / ratio;
 
-  modal.style.display = "flex";
+    if (height > window.innerHeight * 0.85) {
+        height = window.innerHeight * 0.85;
+        width = height * ratio;
+    }
 
-  setTimeout(() => {
+    // Create pages
+    for (let i = 0; i < totalPages; i++) {
+        let div = document.createElement("div");
+        div.className = "page";
 
-    pageFlip = new St.PageFlip(container, {
-      width: 450,
-      height: 600,
-      size: "stretch",
-      showCover: true
+        let img = images[i];
+        div.appendChild(img);
+
+        flipbook.appendChild(div);
+    }
+
+    // Thumbnails
+    for (let i = 1; i <= totalPages; i++) {
+        let thumb = document.createElement("img");
+        thumb.src = `page${i}.jpg`;
+
+        thumb.onclick = () => $('#flipbook').turn('page', i);
+
+        document.getElementById("thumbs").appendChild(thumb);
+    }
+
+    document.getElementById("loader").style.display = "none";
+    flipbook.style.display = "block";
+
+    $('#flipbook').turn({
+        width: width,
+        height: height,
+        autoCenter: true,
+        elevation: 120,
+        gradients: true,
+        duration: 700,
+        when: {
+            turned: function(e, page) {
+                document.getElementById("counter").innerText = page + " / " + totalPages;
+
+                document.querySelectorAll(".thumbs img").forEach((img, i) => {
+                    img.classList.toggle("active", i+1 === page);
+                });
+            }
+        }
     });
 
-    pageFlip.loadFromHTML(document.querySelectorAll(".page"));
+    // Swipe
+    let startX = 0;
 
-    updatePageInfo();
-
-    pageFlip.on("flip", () => {
-      updatePageInfo();
+    document.addEventListener("touchstart", e => {
+        startX = e.touches[0].clientX;
     });
 
-  }, 100);
+    document.addEventListener("touchend", e => {
+        let endX = e.changedTouches[0].clientX;
+
+        if (startX - endX > 50) {
+            $('#flipbook').turn('next');
+        } else if (endX - startX > 50) {
+            $('#flipbook').turn('previous');
+        }
+    });
 }
 
-function closeBook() {
-  document.getElementById("viewerModal").style.display = "none";
+// Fullscreen
+function toggleFullscreen() {
+    if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+    } else {
+        document.exitFullscreen();
+    }
 }
 
-function nextPage() {
-  if (pageFlip) pageFlip.flipNext();
+// Toggle thumbnails
+function toggleThumbs() {
+    let thumbs = document.getElementById("thumbs");
+    thumbs.style.display = (thumbs.style.display === "flex") ? "none" : "flex";
 }
 
-function prevPage() {
-  if (pageFlip) pageFlip.flipPrev();
-}
-
-function updatePageInfo() {
-  const current = pageFlip.getCurrentPageIndex() + 1;
-  document.getElementById("pageInfo").innerText = `${current} / ${totalPages}`;
-}
-
+// Fix resize
+window.addEventListener("resize", () => {
+    location.reload();
+});
 </script>
 
 </body>
